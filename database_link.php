@@ -30,7 +30,7 @@ header('Content-Type: application/json');
 $host = "localhost";  
 $user = "root";       
 $password = "";      
-$dbname = "department_transfer";  // 資料庫名稱
+$dbname = "department_transfer";  // 資料庫名稱1
 
 //連線
 $conn = new mysqli($host, $user, $password, $dbname);
