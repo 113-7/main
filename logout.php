@@ -1,4 +1,5 @@
 <?php
+include('database_link.php');
 session_start();  // 開啟 session
 
 // 清除所有 session 變數

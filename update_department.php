@@ -1,4 +1,5 @@
 <?php
+include('database_link.php');
 session_start();
 
 // 確保用戶已登入
@@ -18,24 +19,72 @@ if (isset($_SESSION['user_id'])) {
     if ($user['role'] == 'admin') {
         // 用戶是學系負責人，繼續處理轉系資料
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $new_department = $_POST['new_department'];  // 來自前端的新的學系名稱
-            $department_id = $_POST['department_id'];  // 來自前端的學系 ID
+            $data = json_decode(file_get_contents('php://input'), true); // true 表示將 JSON 轉換為陣列
+
+            $department_id = $data['department_id'];
+            $second_year_quota = $data['second_year_quota'];
+            $third_year_quota = $data['third_year_quota'];
+            $fourth_year_quota = $data['fourth_year_quota'];
+            $brief_description = $data['brief_description'];
+            $written_exam_weight = $data['written_exam_weight'];
+            $interview_weight = $data['interview_weight'];
+            $review_weight = $data['review_weight'];
+            $additional_notes = $data['additional_notes'];
 
             // 查詢該學系的轉系資料
-            $stmt = $pdo->prepare("SELECT * FROM department_changes WHERE department_id = :department_id");
+            $stmt = $pdo->prepare("SELECT * FROM departments WHERE department_id = :department_id");
             $stmt->execute(['department_id' => $department_id]);
             $change = $stmt->fetch();
 
             // 如果用戶已經有轉系資料，更新資料
             if ($change) {
-                $update_stmt = $pdo->prepare("UPDATE department_changes SET new_department = :new_department WHERE department_id = :department_id");
-                $update_stmt->execute(['new_department' => $new_department, 'department_id' => $department_id]);
+                $update_stmt = $pdo->prepare("
+                    UPDATE departments
+                    SET 
+                        second_year_quota = :second_year_quota,
+                        third_year_quota = :third_year_quota,
+                        fourth_year_quota = :fourth_year_quota,
+                        brief_description = :brief_description,
+                        written_exam_weight = :written_exam_weight,
+                        interview_weight = :interview_weight,
+                        review_weight = :review_weight,
+                        additional_notes = :additional_notes
+                    WHERE department_id = :department_id
+                ");
+                $update_stmt->execute([
+                    'second_year_quota' => $second_year_quota,
+                    'third_year_quota' => $third_year_quota,
+                    'fourth_year_quota' => $fourth_year_quota,
+                    'brief_description' => $brief_description,
+                    'written_exam_weight' => $written_exam_weight,
+                    'interview_weight' => $interview_weight,
+                    'review_weight' => $review_weight,
+                    'additional_notes' => $additional_notes,
+                    'department_id' => $department_id
+                ]);
 
                 echo json_encode(['status' => 'success', 'message' => '轉系資料已更新']);
             } else {
                 // 如果用戶沒有轉系資料，則插入新的資料
-                $insert_stmt = $pdo->prepare("INSERT INTO department_changes (department_id, new_department, status) VALUES (:department_id, :new_department, 'Pending')");
-                $insert_stmt->execute(['department_id' => $department_id, 'new_department' => $new_department]);
+                $insert_stmt = $pdo->prepare("
+                    INSERT INTO departments 
+                        (department_id, second_year_quota, third_year_quota, fourth_year_quota, brief_description, 
+                        written_exam_weight, interview_weight, review_weight, additional_notes, status)
+                    VALUES 
+                        (:department_id, :second_year_quota, :third_year_quota, :fourth_year_quota, :brief_description, 
+                        :written_exam_weight, :interview_weight, :review_weight, :additional_notes, 'Pending')
+                ");
+                $insert_stmt->execute([
+                    'department_id' => $department_id,
+                    'second_year_quota' => $second_year_quota,
+                    'third_year_quota' => $third_year_quota,
+                    'fourth_year_quota' => $fourth_year_quota,
+                    'brief_description' => $brief_description,
+                    'written_exam_weight' => $written_exam_weight,
+                    'interview_weight' => $interview_weight,
+                    'review_weight' => $review_weight,
+                    'additional_notes' => $additional_notes
+                ]);
 
                 echo json_encode(['status' => 'success', 'message' => '轉系資料已新增']);
             }
@@ -49,4 +98,3 @@ if (isset($_SESSION['user_id'])) {
 } else {
     echo json_encode(['status' => 'error', 'message' => '未登入']);
 }
-?>
