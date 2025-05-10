@@ -1,0 +1,33 @@
+<?php
+session_start();
+require_once 'database_link.php';
+
+if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'student') {
+    http_response_code(403);
+    echo "無權限存取此功能。";
+    exit;
+}
+
+$student_id = $_SESSION['user_id'];
+$title = $_POST['title'] ?? '';
+$content = $_POST['content'] ?? '';
+
+if (empty($title) || empty($content)) {
+    http_response_code(400);
+    echo "標題與內容不可為空。";
+    exit;
+}
+
+$stmt = $conn->prepare("INSERT INTO questions (student_id, title, content) VALUES (?, ?, ?)");
+$stmt->bind_param("iss", $student_id, $title, $content);
+
+if ($stmt->execute()) {
+    echo "問題已成功新增。";
+} else {
+    http_response_code(500);
+    echo "新增問題失敗：" . $conn->error;
+}
+
+$stmt->close();
+$conn->close();
+?>
