@@ -1,10 +1,12 @@
 
 <?php //按下收藏按鈕後呼叫這個檔案
+include('database_link.php');
+//前端用include這裡要確定來源
+header("Access-Control-Allow-Origin: http://localhost:8080");
 session_start();
-require_once 'database_link.php';
 
 // 確認使用者是學生
-if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'student') {
+if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'student') {
     http_response_code(403);
     echo "無權限存取此功能。";
     exit;
@@ -20,17 +22,28 @@ if (!$department_id) {
 }
 
 // 插入收藏資料
-$stmt = $conn->prepare("INSERT INTO favorites (student_id, department_id) VALUES (?, ?)");
+$stmt = $conn->prepare("INSERT INTO favorite_departments (student_id, department_id) VALUES (?, ?)");
 $stmt->bind_param("ii", $student_id, $department_id);
 
 if ($stmt->execute()) {
-    echo "收藏成功。";
+    echo json_encode([
+        "success" => true,
+        "message" => "收藏成功"
+    ]);
 } else {
+    error_log("MySQL錯誤碼: " . $conn->errno . ", 錯誤訊息: " . $conn->error);
+
     if ($conn->errno === 1062) {
-        echo "已經收藏過該學系。";
+        echo json_encode([
+            "success" => false,
+            "message" => "已經收藏過該學系"
+        ]);
     } else {
         http_response_code(500);
-        echo "收藏失敗：" . $conn->error;
+        echo json_encode([
+            "success" => false,
+            "message" => "收藏失敗：" . $conn->error
+        ]);
     }
 }
 

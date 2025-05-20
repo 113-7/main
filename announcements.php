@@ -1,23 +1,38 @@
 <?php
-// 資料庫
 include('database_link.php');
 
-// 查詢公告與對應的學系名稱
-$sql = "
-    SELECT 
-        a.announcement_id,
-        a.title,
-        a.content,
-        a.created_at,
-        d.name AS department_name
-    FROM announcements a
-    LEFT JOIN departments d ON a.department_id = d.department_id
-    ORDER BY a.created_at DESC
-";
+$departmentid = isset($_GET['department']) ? $_GET['department'] : '';
 
-$result = $conn->query($sql);
+if ($departmentid) {
+    $stmt = $conn->prepare("
+        SELECT 
+            a.announcement_id,
+            a.title,
+            a.content,
+            a.created_at,
+            d.name AS department_name
+        FROM announcements a
+        LEFT JOIN departments d ON a.department_id = d.department_id
+        WHERE d.department_id = ?
+        ORDER BY a.created_at DESC
+    ");
+    $stmt->bind_param("i", $departmentid); // 用 department_id 的數字比對，不是 name
+    $stmt->execute();
+    $result = $stmt->get_result();
+} else {
+    $result = $conn->query("
+        SELECT 
+            a.announcement_id,
+            a.title,
+            a.content,
+            a.created_at,
+            d.name AS department_name
+        FROM announcements a
+        LEFT JOIN departments d ON a.department_id = d.department_id
+        ORDER BY a.created_at DESC
+    ");
+}
 
-// 檢查是否有資料
 if ($result->num_rows > 0) {
     $announcements = $result->fetch_all(MYSQLI_ASSOC);
     echo json_encode($announcements, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
@@ -25,6 +40,5 @@ if ($result->num_rows > 0) {
     echo json_encode(["error" => "沒有公告資料"]);
 }
 
-// 關閉資料庫連線
 $conn->close();
 ?>

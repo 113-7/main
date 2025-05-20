@@ -2,7 +2,10 @@
 <?php
 // 資料庫
 include('database_link.php');
+session_start();
 
+
+$student_id = $_SESSION['user_id'] ?? 0;
 
 
 // 查詢資料庫，根據學系 ID 獲取詳細資料

@@ -3,6 +3,8 @@ header("Access-Control-Allow-Origin: *"); // 允許所有來源的請求
 header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type");
 header('Content-Type: application/json');
+header("Access-Control-Allow-Credentials: true");
+
 
 $host = "localhost";  
 $user = "root";       
