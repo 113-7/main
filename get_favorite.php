@@ -21,7 +21,7 @@ $sql = "
     FROM favorite_departments f
     JOIN departments d ON f.department_id = d.department_id
     WHERE f.student_id = ?
-    ORDER BY d.name ASC
+    ORDER BY f.favorite_id ASC
 ";
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("i", $student_id);
